@@ -1,0 +1,11 @@
+---
+Language:               Cpp
+Standard:               Cpp11
+BasedOnStyle:           Google  # LLVM, Google, Chromium, Mozilla, WebKit
+ColumnLimit:            128
+
+UseTab: Never
+IndentWidth: 3
+NamespaceIndentation: Inner
+#BreakBeforeInheritanceComma: True
+---

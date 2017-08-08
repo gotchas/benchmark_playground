@@ -1,24 +1,26 @@
-project 
-   : default-build 
-      release 
+project
+   : default-build
+      release
    : requirements
-      <library>/googlebenchmark <threading>single
-      <variant>debug:<define>SOMEMACRO # If compiling debug, define SOMEMACRO
+      <cxxflags>"-fno-omit-frame-pointer "
+      <library>/googlebenchmark # <link>static <runtime-link>static <*>static requires multi  <threading>single <threading>multi
+      #<variant>debug:<define>SOMEMACRO # If compiling debug, define SOMEMACRO
       #<cxxflags>"-fsanitize=float-cast-overflow "
       #<variant>release # builds only release versions. It is not possible to build a debug version anymore as requirements can not be overwritten.
 ;
 
 exe hash : hash.cpp : <optimization>speed ;
+exe fast_accum : fast_accum.cpp : <optimization>speed ;
 
-run test_int_overflow.cpp [ obj ftrapv : ftrapv_gcc.cpp ] 
-   : : : <optimization>speed <variant>release 
-         <toolset>gcc:<cxxflags>"-ftrapv " 
+run test_int_overflow.cpp [ obj ftrapv : ftrapv_gcc.cpp ]
+   : : : <optimization>speed <variant>release
+         <toolset>gcc:<cxxflags>"-ftrapv "
    ;
 alias test_int_overflow : : <toolset>msvc ;
 
 exe int_overflow_no_check : test_int_overflow.cpp ftrapv_gcc.cpp : <optimization>speed <variant>release ;
 alias int_overflow_no_check : : <toolset>msvc ;
-   
+
 run random_overflow.cpp ;
 
 #error: default build must be identical in all alternatives

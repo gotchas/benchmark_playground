@@ -1,3 +1,6 @@
+perf.data*
+bin/
+
 # Compiled Object files
 *.slo
 *.lo
@@ -27,3 +30,4 @@
 *.exe
 *.out
 *.app
+
