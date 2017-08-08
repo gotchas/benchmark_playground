@@ -12,72 +12,59 @@
 #include <benchmark/benchmark.h>
 
 // This file is a "Hello, world!" in C++ language by GCC for wandbox.
-#include <iostream>
-#include <cstdlib>
 #include <algorithm>
-#include <vector>
-#include <string>
-#include <numeric>
+#include <cstdlib>
 #include <functional>
+#include <iostream>
+#include <numeric>
+#include <string>
+#include <vector>
 
-
-#define UNLIKELY(x)  __builtin_expect((bool)(x), 0)
+#define UNLIKELY(x) __builtin_expect((bool)(x), 0)
 // if( UNLIKELY(input[i]>ceil) )
 
-static void escape(void* p) {
-   asm volatile("" : : "g"(p) : "memory");
-}
-static void clobber() { // writes to all memory
+static void escape(void *p) { asm volatile("" : : "g"(p) : "memory"); }
+static void clobber() {  // writes to all memory
    asm volatile("" : : : "memory");
 }
 
-#define D(X) // D(X
+#define D(X)  // D(X
 struct Vector : public std::vector<int> {
-  Vector(std::initializer_list<int> il) : std::vector<int>(il){
-    D("Vector(std::initializer_list)\n");
-  }
-  Vector() {
-    D("Vector()\n");
-  }
-  Vector(const Vector &v) : std::vector<int>(v) {
-    D("Vector(const Vector &)\n");
-  }
-  Vector & operator = (const Vector &v) {
-    if (this != &v) {
-      std::vector<int>::operator=(v);
-      D("Vector& Vector::operator=(const Vector &)\n");
-    }
-    return *this;
-  }
-  Vector & operator = (Vector && v) {
-    if (this != &v) {
-      std::vector<int>::operator=(std::move(v));
-      D("Vector& Vector::operator=(Vector&&)\n");
-    }
-    return *this;
-  }
-  Vector(Vector&& v) : std::vector<int>(std::move(v)) {
-     D("Vector(Vector&&)\n");
-  }
+   Vector(std::initializer_list<int> il) : std::vector<int>(il) { D("Vector(std::initializer_list)\n"); }
+   Vector() { D("Vector()\n"); }
+   Vector(const Vector &v) : std::vector<int>(v) { D("Vector(const Vector &)\n"); }
+   Vector &operator=(const Vector &v) {
+      if (this != &v) {
+         std::vector<int>::operator=(v);
+         D("Vector& Vector::operator=(const Vector &)\n");
+      }
+      return *this;
+   }
+   Vector &operator=(Vector &&v) {
+      if (this != &v) {
+         std::vector<int>::operator=(std::move(v));
+         D("Vector& Vector::operator=(Vector&&)\n");
+      }
+      return *this;
+   }
+   Vector(Vector &&v) : std::vector<int>(std::move(v)) { D("Vector(Vector&&)\n"); }
 };
 
 Vector copy_accumulate(Vector &v) {
-    return std::accumulate(v.begin(), v.end(), Vector(),
-                    [](Vector & v, int i) {
-                      v.push_back(i);
-                      return v;
-                    });
-    //D("size of v2 = " << v2.size() << "\n");
+   return std::accumulate(v.begin(), v.end(), Vector(), [](Vector &v, int i) {
+      v.push_back(i);
+      return v;
+   });
+   // D("size of v2 = " << v2.size() << "\n");
 }
 
 Vector nocopy_accumulate(Vector &v) {
-    Vector init;
-    return std::accumulate(v.begin(), v.end(), std::ref(init),
-                    [](std::reference_wrapper<Vector> v, int i) {
-                      v.get().push_back(i);
-                      return v;
-                    });
-    //D("size of v2 = " << v2.size() << "\n");
+   Vector init;
+   return std::accumulate(v.begin(), v.end(), std::ref(init), [](std::reference_wrapper<Vector> v, int i) {
+      v.get().push_back(i);
+      return v;
+   });
+   // D("size of v2 = " << v2.size() << "\n");
 }
 
 #if 0
@@ -89,30 +76,29 @@ int main()
     nocopy_accumulate(v);
 }
 #else
+
 BENCHMARK_MAIN()
 
-static void BM_ca(benchmark::State& state) {
-  Vector v { 1, 2, 3, 4 };
-  while (state.KeepRunning()) {
-    auto res = copy_accumulate(v);
-    //escape(&res);
-    escape(res.data());
-    //clobber();
-  }
+static void BM_ca(benchmark::State &state) {
+   Vector v{1, 2, 3, 4};
+   while (state.KeepRunning()) {
+      auto res = copy_accumulate(v);
+      // escape(&res);
+      escape(res.data());
+      // clobber();
+   }
 }
-//BENCHMARK_RANGE(BM_ca, 1, 1024 * 1024);
 BENCHMARK(BM_ca);
 
-static void BM_noca(benchmark::State& state) {
-  Vector v { 1, 2, 3, 4 };
-  while ( UNLIKELY(state.KeepRunning()) ) {//UNLIKELY(x) only to test
-    auto res = nocopy_accumulate(v);
-    //escape(&res);
-    escape(res.data());
-    //clobber();
-  }
+static void BM_noca(benchmark::State &state) {
+   Vector v{1, 2, 3, 4};
+   while (UNLIKELY(state.KeepRunning())) {  // UNLIKELY(x) only to test
+      auto res = nocopy_accumulate(v);
+      // escape(&res);
+      escape(res.data());
+      // clobber();
+   }
 }
-//BENCHMARK_RANGE(BM_noca, 1, 1024 * 1024);
 BENCHMARK(BM_noca);
-#endif
 
+#endif
